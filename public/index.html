@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Google Sign In Example</title>
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.1/firebase-app.js";
+      import {
+        signOut,
+        getAuth,
+        onAuthStateChanged,
+        connectAuthEmulator,
+        signInWithEmailAndPassword,
+        createUserWithEmailAndPassword,
+        updateProfile,
+      } from "https://www.gstatic.com/firebasejs/10.3.1/firebase-auth.js";
+      import { useEmulator, firebaseConfig } from "./config.js";
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth();
+      if (useEmulator) {
+        connectAuthEmulator(auth, "http://127.0.0.1:9099");
+      }
+
+      async function signUp() {
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        await createUserWithEmailAndPassword(auth, email, password);
+      }
+
+      async function signIn() {
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        var result = await signInWithEmailAndPassword(auth, email, password);
+        var user = result.user;
+      }
+
+      async function updateUser() {
+        const user = auth.currentUser;
+        await updateProfile(user, { displayName: null, photoURL: null });
+        console.log("updated user");
+      }
+
+      async function userSignOut() {
+        var result = await signOut(auth);
+      }
+
+      async function initApp() {
+        onAuthStateChanged(auth, function (user) {
+          if (user) {
+            // User is signed in.
+            var displayName = user.displayName;
+            var email = user.email;
+            var emailVerified = user.emailVerified;
+            var photoURL = user.photoURL;
+            var isAnonymous = user.isAnonymous;
+            var uid = user.uid;
+            var providerData = user.providerData;
+            console.log(user);
+            document.getElementById("sign-in-status").textContent = "Signed in";
+            document.getElementById("account-details").textContent =
+              JSON.stringify(user, null, "  ");
+          } else {
+            document.getElementById("sign-in-status").textContent =
+              "Signed out";
+            document.getElementById("account-details").textContent = "null";
+          }
+        });
+
+        document
+          .getElementById("sign-up")
+          .addEventListener("click", signUp, false);
+
+        document
+          .getElementById("sign-in")
+          .addEventListener("click", signIn, false);
+
+        document
+          .getElementById("update-user")
+          .addEventListener("click", updateUser, false);
+
+        document
+          .getElementById("sign-out")
+          .addEventListener("click", userSignOut, false);
+      }
+
+      initApp();
+    </script>
+  </head>
+  <body>
+    <div>
+      email:
+      <input type="text" id="email" />
+    </div>
+    <div>
+      password:
+      <input type="text" id="password" />
+    </div>
+    <button id="sign-up">Sign up</button>
+    <button id="sign-in">Sign in</button>
+    <button id="update-user">Update user</button>
+    <button id="sign-out">Sign out</button>
+    <div>
+      Firebase sign-in status:
+      <span id="sign-in-status">Unknown</span>
+      <div>Firebase auth <code>currentUser</code> object value:</div>
+      <pre><code id="account-details">null</code></pre>
+    </div>
+  </body>
+</html>
